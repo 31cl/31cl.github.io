@@ -5,50 +5,142 @@
     <title>Markdown Editor for AyePages</title>
     <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.8rem;
+            color: #333;
+        }
+
         .header-fields {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            gap: 10px;
             margin-bottom: 20px;
         }
-        .header-fields input {
-            margin-bottom: 10px;
-            padding: 5px;
+
+        .header-fields label {
+            display: flex;
+            flex-direction: column;
+            font-weight: bold;
+            font-size: 0.9rem;
         }
+
+        .header-fields input {
+            padding: 8px;
+            font-size: 0.9rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
         #header-output {
+            width: 100%;
+            height: 150px;
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
             display: none;
-            margin-top: 20px;
+        }
+
+        button {
+            margin: 5px 0;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0073e6;
+            color: white;
+        }
+
+        .submit-section {
+            display: flex;
+            gap: 10px;
+            flex-direction: column;
+        }
+
+        .help-text {
+            display: none;
+            margin-top: 10px;
+            background: #e7f4ff;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            border: 1px solid #d0e7ff;
         }
     </style>
 </head>
 <body>
 
+    <h1>Markdown Editor for AyePages</h1>
+
     <!-- Header Input Fields -->
     <div class="header-fields">
-        <input type="text" id="post-title" placeholder="Title" value="Demo Post">
-        <input type="datetime-local" id="post-date" value="2024-09-01T15:34:30">
-        <input type="text" id="post-categories" placeholder="Categories (comma-separated)" value="blog, intro">
-        <input type="text" id="post-tags" placeholder="Tags (comma-separated)" value="demo, blog">
+        <label>
+            Title:
+            <input type="text" id="post-title" placeholder="Enter the post title" value="Demo Post">
+        </label>
+        <label>
+            Date:
+            <input type="datetime-local" id="post-date" value="2024-09-01T15:34:30">
+        </label>
+        <label>
+            Categories (comma-separated):
+            <input type="text" id="post-categories" placeholder="e.g., blog, intro" value="blog, intro">
+        </label>
+        <label>
+            Tags (comma-separated):
+            <input type="text" id="post-tags" placeholder="e.g., demo, blog" value="demo, blog">
+        </label>
     </div>
 
     <!-- Markdown Editor -->
     <textarea id="markdown-editor"></textarea>
-    
+
     <!-- Header and Markdown Combined Output -->
     <label>
         <input type="checkbox" id="show-header" onclick="toggleHeaderOutput()"> Show Header
     </label>
     <textarea id="header-output" readonly></textarea>
-    
+
     <!-- File Upload and Copy Buttons -->
     <button onclick="copyToClipboard()">Copy to Clipboard</button>
-    
-    <!-- URL and Submit for GitHub Pages -->
-    <input type="text" id="github-url" placeholder="GitHub File URL">
-    <button onclick="submitMarkdown()">Submit</button>
-    
+
+    <!-- Submit Section for GitHub Pages -->
+    <div class="submit-section">
+        <label>
+            GitHub File URL:
+            <input type="text" id="github-url" placeholder="Enter GitHub file URL for submission">
+        </label>
+        <button onclick="submitMarkdown()">Submit</button>
+        <button onclick="showHelp()">Help</button>
+    </div>
+
     <!-- Load Markdown File -->
     <button onclick="loadMarkdown()">Load Existing Markdown</button>
-    
+
+    <!-- Help Text for GitHub URL Workflow -->
+    <div class="help-text" id="help-text">
+        <strong>GitHub URL Workflow:</strong> <br>
+        1. Enter the GitHub URL where the Markdown file will be uploaded. This URL typically follows the format:
+        `https://api.github.com/repos/USERNAME/REPO/contents/PATH/TO/FILE.md`.<br>
+        2. Ensure your GitHub token has permission to create or edit files in the repository.<br>
+        3. On submission, the content is base64 encoded and sent via GitHub's API.<br>
+        4. You can include an existing file's SHA if updating, otherwise leave it for new files.
+    </div>
+
     <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
     <script>
         // Initialize EasyMDE
@@ -154,13 +246,12 @@ tags:
             }
         }
 
-        // Event listeners to update header output on input changes
-        document.getElementById('post-title').addEventListener('input', updateHeader);
-        document.getElementById('post-date').addEventListener('input', updateHeader);
-        document.getElementById('post-categories').addEventListener('input', updateHeader);
-        document.getElementById('post-tags').addEventListener('input', updateHeader);
+        // Show Help Text
+        function showHelp() {
+            const helpText = document.getElementById('help-text');
+            helpText.style.display = helpText.style.display === 'none' ? 'block' : 'none';
+        }
     </script>
 
 </body>
 </html>
-
