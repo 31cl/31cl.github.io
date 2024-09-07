@@ -1,17 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <title>Markdown Editor for AyePages</title>
-  <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">  
+    <meta charset="UTF-8">
+    <title>Markdown Editor for AyePages</title>
+    <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
+    <style>
+        .header-fields {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+        .header-fields input {
+            margin-bottom: 10px;
+            padding: 5px;
+        }
+        #header-output {
+            display: none;
+            margin-top: 20px;
+        }
+    </style>
 </head>
-
 <body>
-  <textarea id="my-text-area"></textarea>
-  <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
-  <script>
-    const easyMDE = new EasyMDE({element: document.getElementById('my-text-area')});
-  </script>
-  <script>
-    easyMDE.value('New input for **EasyMDE**');
-  </script>
 
-Uses <a href="https://github.com/Ionaru/easy-markdown-editor">easy markdown editor</a>
+    <!-- Header Input Fields -->
+    <div class="header-fields">
+        <input type="text" id="post-title" placeholder="Title" value="Demo Post">
+        <input type="datetime-local" id="post-date" value="2024-09-01T15:34:30">
+        <input type="text" id="post-categories" placeholder="Categories (comma-separated)" value="blog, intro">
+        <input type="text" id="post-tags" placeholder="Tags (comma-separated)" value="demo, blog">
+    </div>
+
+    <!-- Markdown Editor -->
+    <textarea id="markdown-editor"></textarea>
+    
+    <!-- Header and Markdown Combined Output -->
+    <label>
+        <input type="checkbox" id="show-header" onclick="toggleHeaderOutput()"> Show Header
+    </label>
+    <textarea id="header-output" readonly></textarea>
+    
+    <!-- File Upload and Copy Buttons -->
+    <button onclick="copyToClipboard()">Copy to Clipboard</button>
+    
+    <!-- URL and Submit for GitHub Pages -->
+    <input type="text" id="github-url" placeholder="GitHub File URL">
+    <button onclick="submitMarkdown()">Submit</button>
+    
+    <!-- Load Markdown File -->
+    <button onclick="loadMarkdown()">Load Existing Markdown</button>
+    
+    <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
+    <script>
+        // Initialize EasyMDE
+        const easyMDE = new EasyMDE({element: document.getElementById('markdown-editor')});
+
+        // Toggle Header Output
+        function toggleHeaderOutput() {
+            const headerOutput = document.getElementById('header-output');
+            headerOutput.style.display = headerOutput.style.display === 'none' ? 'block' : 'none';
+            updateHeader();
+        }
+
+        // Update Header with Fields' Values
+        function updateHeader() {
+            const title = document.getElementById('post-title').value;
+            const date = document.getElementById('post-date').value;
+            const categories = document.getElementById('post-categories').value.split(',').map(cat => cat.trim());
+            const tags = document.getElementById('post-tags').value.split(',').map(tag => tag.trim());
+
+            const header = `---
+title: "${title}"
+date:  ${date} +04:00
+categories:
+  - ${categories.join('\n  - ')}
+tags:
+  - ${tags.join('\n  - ')}
+---\n\n`;
+
+            document.getElementById('header-output').value = header + easyMDE.value();
+        }
+
+        // Copy to Clipboard Function
+        function copyToClipboard() {
+            updateHeader();
+            const output = document.getElementById('header-output');
+            output.select();
+            document.execCommand('copy');
+            alert('Copied to clipboard!');
+        }
+
+        // Submit Markdown File to GitHub
+        async function submitMarkdown() {
+            updateHeader();
+            const content = encodeURIComponent(document.getElementById('header-output').value);
+            const githubUrl = document.getElementById('github-url').value;
+
+            if (!githubUrl) {
+                alert('Please enter the GitHub URL.');
+                return;
+            }
+
+            // Example GitHub API URL Format for File Creation/Editing
+            // Ensure your GitHub API token has permission to edit the repository.
+            const apiUrl = githubUrl; // Adjust to the specific GitHub API endpoint needed
+            const response = await fetch(apiUrl, {
+                method: 'PUT', // Adjust method as needed
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer YOUR_GITHUB_TOKEN'
+                },
+                body: JSON.stringify({
+                    message: 'Update post via Markdown editor',
+                    content: btoa(unescape(encodeURIComponent(content))), // Base64 encoding for GitHub
+                    // sha: 'EXISTING_FILE_SHA' // Required if updating existing file
+                })
+            });
+
+            if (response.ok) {
+                alert('File successfully submitted to GitHub.');
+            } else {
+                alert('Error submitting the file to GitHub.');
+            }
+        }
+
+        // Load Existing Markdown File
+        function loadMarkdown() {
+            const sourceUrl = prompt('Enter the URL of the Markdown file to load:');
+            if (sourceUrl) {
+                fetch(sourceUrl)
+                    .then(response => response.text())
+                    .then(data => {
+                        const splitData = data.split('---\n');
+                        if (splitData.length > 2) {
+                            const header = splitData[1];
+                            const body = splitData.slice(2).join('---\n');
+
+                            // Parse header fields
+                            const titleMatch = header.match(/title:\s*"([^"]+)"/);
+                            const dateMatch = header.match(/date:\s*([^\n]+)/);
+                            const categoriesMatch = header.match(/categories:\s*\n\s*- ([^\n]+)/g);
+                            const tagsMatch = header.match(/tags:\s*\n\s*- ([^\n]+)/g);
+
+                            document.getElementById('post-title').value = titleMatch ? titleMatch[1] : '';
+                            document.getElementById('post-date').value = dateMatch ? dateMatch[1].split(' ')[0] : '';
+                            document.getElementById('post-categories').value = categoriesMatch ? categoriesMatch.map(c => c.replace(/categories:\s*\n\s*- /g, '')).join(', ') : '';
+                            document.getElementById('post-tags').value = tagsMatch ? tagsMatch.map(t => t.replace(/tags:\s*\n\s*- /g, '')).join(', ') : '';
+
+                            // Load body into EasyMDE
+                            easyMDE.value(body.trim());
+                            updateHeader();
+                        }
+                    });
+            }
+        }
+
+        // Event listeners to update header output on input changes
+        document.getElementById('post-title').addEventListener('input', updateHeader);
+        document.getElementById('post-date').addEventListener('input', updateHeader);
+        document.getElementById('post-categories').addEventListener('input', updateHeader);
+        document.getElementById('post-tags').addEventListener('input', updateHeader);
+    </script>
+
 </body>
+</html>
+
