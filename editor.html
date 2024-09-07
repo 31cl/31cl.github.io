@@ -2,179 +2,272 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Markdown Editor for AyePages</title>
     <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
         }
-        .header-field {
-            margin-bottom: 10px;
+
+        h1 {
+            text-align: center;
+            font-size: 1.8rem;
+            color: #333;
         }
+
+        .header-fields {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .header-fields label {
+            display: flex;
+            flex-direction: column;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .header-fields input, .header-fields select {
+            padding: 8px;
+            font-size: 0.9rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        #header-output {
+            width: 100%;
+            height: 150px;
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            display: none;
+        }
+
+        button {
+            margin: 5px 0;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0073e6;
+            color: white;
+        }
+
+        .submit-section {
+            display: flex;
+            gap: 10px;
+            flex-direction: column;
+        }
+
+        .help-text {
+            display: none;
+            margin-top: 10px;
+            background: #e7f4ff;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            border: 1px solid #d0e7ff;
+        }
+
         .embed-toolbox {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 4px;
+            background: #f0f8ff;
+        }
+
+        #view-link {
+            display: none;
             margin-top: 20px;
         }
-        .alert {
-            color: red;
-            margin-top: 10px;
+
+        #view-link a {
+            color: #0073e6;
+            text-decoration: none;
+        }
+
+        #view-link a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
+
     <h1>Markdown Editor for AyePages</h1>
-    
+
     <!-- Header Input Fields -->
-    <div class="header-field">
-        <label for="post-title">Title:</label>
-        <input type="text" id="post-title" placeholder="Post Title">
-    </div>
-    <div class="header-field">
-        <label for="post-date">Date:</label>
-        <input type="datetime-local" id="post-date">
-    </div>
-    <div class="header-field">
-        <label for="post-categories">Categories (comma-separated):</label>
-        <input type="text" id="post-categories" placeholder="e.g., blog, intro">
-    </div>
-    <div class="header-field">
-        <label for="post-tags">Tags (comma-separated):</label>
-        <input type="text" id="post-tags" placeholder="e.g., demo, blog">
-    </div>
-
-    <!-- EasyMDE Markdown Editor -->
-    <textarea id="my-text-area"></textarea>
-
-    <!-- Checkbox to Show Content -->
-    <div>
-        <input type="checkbox" id="show-content-checkbox">
-        <label for="show-content-checkbox">Show Content</label>
-    </div>
-
-    <!-- Header Display Box -->
-    <textarea id="header-content" style="display:none;" readonly></textarea>
-    
-    <!-- Copy Header to Clipboard Button -->
-    <button id="copy-header">Copy Header to Clipboard</button>
-
-    <!-- GitHub URL Input -->
-    <div class="header-field">
-        <label for="github-url">GitHub URL:</label>
-        <input type="text" id="github-url" placeholder="GitHub URL (for submitting the post)">
+    <div class="header-fields">
+        <label>
+            Title:
+            <input type="text" id="post-title" placeholder="Enter the post title" value="Demo Post">
+        </label>
+        <label>
+            Date:
+            <input type="datetime-local" id="post-date" value="">
+        </label>
+        <label>
+            Time Zone:
+            <select id="timezone">
+                <!-- Dynamically populated -->
+            </select>
+        </label>
+        <label>
+            Categories (comma-separated):
+            <input type="text" id="post-categories" placeholder="e.g., blog, intro" value="blog, intro">
+        </label>
+        <label>
+            Tags (comma-separated):
+            <input type="text" id="post-tags" placeholder="e.g., demo, blog" value="demo, blog">
+        </label>
     </div>
 
-    <!-- Load Button -->
-    <button id="load-button">Load Markdown File</button>
-    
-    <!-- Submit Button -->
-    <button id="submit-button">Submit to GitHub</button>
-    
-    <!-- Embedding Toolbox -->
+    <!-- Markdown Editor -->
+    <textarea id="markdown-editor"></textarea>
+
+    <!-- Header and Markdown Combined Output -->
+    <label>
+        <input type="checkbox" id="show-header" onclick="toggleHeaderOutput()"> Show Header
+    </label>
+    <textarea id="header-output" readonly></textarea>
+
+    <!-- File Upload and Copy Buttons -->
+    <button onclick="copyToClipboard()">Copy to Clipboard</button>
+
+    <!-- Submit Section for URL Handling -->
+    <div class="submit-section">
+        <label>
+            File URL:
+            <input type="text" id="file-url" placeholder="Enter URL for Markdown file">
+        </label>
+        <button onclick="openFileUrl()">Open File URL</button>
+        <button onclick="showHelp()">Help</button>
+    </div>
+
+    <!-- Load Markdown File -->
+    <button onclick="loadMarkdown()">Load Existing Markdown</button>
+
+    <!-- Help Text for URL Workflow -->
+    <div class="help-text" id="help-text">
+        <strong>URL Workflow:</strong> <br>
+        1. Enter the URL where the Markdown file is hosted.<br>
+        2. Use the "Open File URL" button to navigate to the URL.<br>
+        3. You can include the URL in the 'File URL' field to handle direct interactions.
+    </div>
+
+    <!-- Embed Toolbox for Social Media Content -->
     <div class="embed-toolbox">
-        <label>Embedding Toolbox:</label>
-        <button onclick="insertEmbed('youtube')">Embed YouTube</button>
-        <button onclick="insertEmbed('linkedin')">Embed LinkedIn</button>
-        <!-- Add more embedding options as needed -->
+        <h3>Embed Social Media Content</h3>
+        <button onclick="insertEmbed('YouTube')">Embed YouTube Video</button>
+        <button onclick="insertEmbed('LinkedIn')">Embed LinkedIn Post</button>
+        <button onclick="insertEmbed('Twitter')">Embed Tweet</button>
+    </div>
+
+    <!-- View File Link -->
+    <div id="view-link">
+        <a id="file-link" href="" target="_blank">View File</a>
     </div>
 
     <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
     <script>
-        const easyMDE = new EasyMDE({element: document.getElementById('my-text-area')});
+        // Initialize EasyMDE
+        const easyMDE = new EasyMDE({element: document.getElementById('markdown-editor')});
 
-        // Update the Header Content Textarea
-        document.getElementById('show-content-checkbox').addEventListener('change', function () {
-            const headerContent = generateHeaderContent();
-            const headerBox = document.getElementById('header-content');
-            if (this.checked) {
-                headerBox.style.display = 'block';
-                headerBox.value = headerContent;
-                const currentContent = easyMDE.value();
-                easyMDE.value(headerContent + '\n' + currentContent);
-            } else {
-                headerBox.style.display = 'none';
-            }
-        });
+        // Populate timezone select with browser detected time zone
+        const timezoneSelect = document.getElementById('timezone');
+        const detectedTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        timezoneSelect.innerHTML = `<option value="${detectedTimeZone}" selected>${detectedTimeZone}</option>`;
 
-        // Generate the Header Content based on Input Fields
-        function generateHeaderContent() {
+        // Toggle Header Output
+        function toggleHeaderOutput() {
+            const headerOutput = document.getElementById('header-output');
+            headerOutput.style.display = headerOutput.style.display === 'none' ? 'block' : 'none';
+            updateHeader();
+        }
+
+        // Update Header with Fields' Values
+        function updateHeader() {
             const title = document.getElementById('post-title').value;
-            const date = document.getElementById('post-date').value || new Date().toISOString();
+            const date = document.getElementById('post-date').value || new Date().toISOString().slice(0, 16);
+            const timezone = document.getElementById('timezone').value || detectedTimeZone;
             const categories = document.getElementById('post-categories').value.split(',').map(cat => cat.trim());
             const tags = document.getElementById('post-tags').value.split(',').map(tag => tag.trim());
-            return `---\ntitle: "${title}"\ndate: ${date}\ncategories:\n  - ${categories.join('\n  - ')}\ntags:\n  - ${tags.join('\n  - ')}\n---\n`;
+
+            const header = `---
+title: "${title}"
+date: ${date} ${timezone}
+categories:
+  - ${categories.join('\n  - ')}
+tags:
+  - ${tags.join('\n  - ')}
+---\n\n`;
+
+            document.getElementById('header-output').value = header + easyMDE.value();
         }
 
-        // Copy Header to Clipboard
-        document.getElementById('copy-header').addEventListener('click', function () {
-            const headerContent = generateHeaderContent();
-            navigator.clipboard.writeText(headerContent).then(() => {
-                alert('Header copied to clipboard. Use Ctrl + A to select all text and Ctrl + V to replace with copied header.');
-            });
-        });
-
-        // Load Markdown File from GitHub URL
-        document.getElementById('load-button').addEventListener('click', function () {
-            const githubUrl = document.getElementById('github-url').value;
-            const rawUrl = githubUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
-            fetch(rawUrl)
-                .then(response => response.text())
-                .then(data => {
-                    const headerEndIndex = data.indexOf('---', 4);
-                    if (headerEndIndex !== -1) {
-                        const headerContent = data.substring(0, headerEndIndex + 3);
-                        document.getElementById('header-content').value = headerContent;
-                        document.getElementById('show-content-checkbox').checked = true;
-                        easyMDE.value(data.substring(headerEndIndex + 3).trim());
-                    } else {
-                        // No header found, just load content
-                        easyMDE.value(data.trim());
-                    }
-                    document.getElementById('post-date').value = new Date().toISOString().slice(0, 16);
-                })
-                .catch(() => {
-                    alert('Failed to load file. Using current date and time.');
-                    document.getElementById('post-date').value = new Date().toISOString().slice(0, 16);
-                });
-        });
-
-        // Insert Embed Code into EasyMDE
-        function insertEmbed(type) {
-            let embedCode = '';
-            switch (type) {
-                case 'youtube':
-                    embedCode = '[![YouTube Video](https://img.youtube.com/vi/VIDEO_ID/0.jpg)](https://www.youtube.com/watch?v=VIDEO_ID)';
-                    break;
-                case 'linkedin':
-                    embedCode = '<a href="LINKEDIN_URL">LinkedIn Post</a>';
-                    break;
-                default:
-                    embedCode = '';
-            }
-            easyMDE.codemirror.replaceSelection(embedCode);
+        // Copy to Clipboard Function
+        function copyToClipboard() {
+            updateHeader();
+            const output = document.getElementById('header-output');
+            output.select();
+            document.execCommand('copy');
+            alert('Copied to clipboard!');
         }
 
-        // Submit to GitHub
-        document.getElementById('submit-button').addEventListener('click', function () {
-            const githubUrl = document.getElementById('github-url').value;
-            const content = encodeURIComponent(generateHeaderContent() + easyMDE.value());
-            const commitMessage = encodeURIComponent('Update Post');
-            const filePathParts = githubUrl.split('github.com/')[1].split('/');
-            const isBlob = githubUrl.includes('/blob/');
-            let filePath = filePathParts.slice(1).join('/').replace('/blob/', '/');
-
-            let targetUrl;
-            if (isBlob) {
-                targetUrl = `https://github.com/${filePath}/edit/master?value=${content}&message=${commitMessage}&filename=${filePath}`;
-                alert('Please manually copy the content to your clipboard, then use Ctrl + A to select all text and Ctrl + V to replace the existing content.');
+        // Open File URL
+        function openFileUrl() {
+            const fileUrl = document.getElementById('file-url').value;
+            if (fileUrl) {
+                window.open(fileUrl, '_blank');
             } else {
-                const filename = encodeURIComponent(filePathParts.pop());
-                filePath = filePathParts.join('/');
-                targetUrl = `https://github.com/${filePath}/new/master/${filename}?value=${content}&message=${commitMessage}&filename=${filename}`;
-                window.open(targetUrl, '_blank');
+                alert('Please enter a file URL.');
             }
-        });
+        }
+
+        // Show Help Text
+        function showHelp() {
+            document.getElementById('help-text').style.display = 'block';
+        }
+
+        // Load Existing Markdown (for URL-based files)
+        function loadMarkdown() {
+            const fileUrl = document.getElementById('file-url').value;
+            if (!fileUrl) {
+                alert('Please enter a file URL.');
+                return;
+            }
+
+            fetch(fileUrl)
+                .then(response => response.text())
+                .then(text => easyMDE.value(text))
+                .catch(error => {
+                    alert('Failed to load Markdown. Check the console for details.');
+                    console.error(error);
+                });
+        }
+
+        // Insert Embed Code (Example functionality)
+        function insertEmbed(type) {
+            const embedCode = prompt(`Enter the ${type} embed code:`);
+            if (embedCode) {
+                easyMDE.codemirror.replaceSelection(embedCode);
+            }
+        }
     </script>
 </body>
 </html>
