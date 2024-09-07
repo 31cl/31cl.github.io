@@ -47,10 +47,10 @@
     <!-- EasyMDE Markdown Editor -->
     <textarea id="my-text-area"></textarea>
 
-    <!-- Checkbox to Show Header -->
+    <!-- Checkbox to Show Content -->
     <div>
-        <input type="checkbox" id="show-header-checkbox">
-        <label for="show-header-checkbox">Show Header</label>
+        <input type="checkbox" id="show-content-checkbox">
+        <label for="show-content-checkbox">Show Content</label>
     </div>
 
     <!-- Header Display Box -->
@@ -84,12 +84,14 @@
         const easyMDE = new EasyMDE({element: document.getElementById('my-text-area')});
 
         // Update the Header Content Textarea
-        document.getElementById('show-header-checkbox').addEventListener('change', function () {
+        document.getElementById('show-content-checkbox').addEventListener('change', function () {
             const headerContent = generateHeaderContent();
             const headerBox = document.getElementById('header-content');
             if (this.checked) {
                 headerBox.style.display = 'block';
                 headerBox.value = headerContent;
+                const currentContent = easyMDE.value();
+                easyMDE.value(headerContent + '\n' + currentContent);
             } else {
                 headerBox.style.display = 'none';
             }
@@ -106,7 +108,7 @@
 
         // Copy Header to Clipboard
         document.getElementById('copy-header').addEventListener('click', function () {
-            const headerContent = document.getElementById('header-content').value;
+            const headerContent = generateHeaderContent();
             navigator.clipboard.writeText(headerContent).then(() => {
                 alert('Header copied to clipboard. Use Ctrl + A to select all text and Ctrl + V to replace with copied header.');
             });
@@ -119,13 +121,17 @@
             fetch(rawUrl)
                 .then(response => response.text())
                 .then(data => {
-                    // Parse date and other details if possible
-                    const matches = data.match(/date: (.+)/);
-                    const dateValue = matches ? new Date(matches[1]).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16);
-                    document.getElementById('post-date').value = dateValue;
-
-                    // Set EasyMDE value
-                    easyMDE.value(data.split('---')[2].trim());
+                    const headerEndIndex = data.indexOf('---', 4);
+                    if (headerEndIndex !== -1) {
+                        const headerContent = data.substring(0, headerEndIndex + 3);
+                        document.getElementById('header-content').value = headerContent;
+                        document.getElementById('show-content-checkbox').checked = true;
+                        easyMDE.value(data.substring(headerEndIndex + 3).trim());
+                    } else {
+                        // No header found, just load content
+                        easyMDE.value(data.trim());
+                    }
+                    document.getElementById('post-date').value = new Date().toISOString().slice(0, 16);
                 })
                 .catch(() => {
                     alert('Failed to load file. Using current date and time.');
