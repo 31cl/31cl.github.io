@@ -1,0 +1,14 @@
+<head>
+  <title>Markdown Editor for AyePages</title>
+  <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">  
+</head>
+<body>
+  <textarea id="my-text-area"></textarea>
+  <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
+  <script>
+    const easyMDE = new EasyMDE({element: document.getElementById('my-text-area')});
+  </script>
+  <script>
+    easyMDE.value('New input for **EasyMDE**');
+  </script>
+</body>
