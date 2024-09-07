@@ -166,10 +166,8 @@
 
             let targetUrl;
             if (isBlob) {
-                targetUrl = `https://github.com/${filePath}/edit/master`;
-                navigator.clipboard.writeText(generateHeaderContent() + easyMDE.value()).then(() => {
-                    alert('Opening the edit page. Use Ctrl + A to select all text and Ctrl + V to replace with copied content.');
-                });
+                targetUrl = `https://github.com/${filePath}/edit/master?value=${content}&message=${commitMessage}&filename=${filePath}`;
+                alert('Please manually copy the content to your clipboard, then use Ctrl + A to select all text and Ctrl + V to replace the existing content.');
             } else {
                 const filename = encodeURIComponent(filePathParts.pop());
                 filePath = filePathParts.join('/');
